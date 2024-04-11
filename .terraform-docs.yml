@@ -1,0 +1,22 @@
+formatter: "" # this is required
+
+
+content: |-
+  {{ .Providers }}
+
+  {{ .Inputs }}
+
+  {{ .Outputs }}
+
+  {{ .Resources }}
+
+sections:
+  hide-all: true
+  show:
+    - providers
+    - inputs
+    - outputs
+    - resources
+
+settings:
+  hide-empty: true

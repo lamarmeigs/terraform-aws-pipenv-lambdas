@@ -63,3 +63,15 @@ $ brew install tfenv
 $ tfenv install 1.7.5
 $ tfenv use 1.7.5
 ```
+
+### Validation
+
+For convenience, this project includes [`pre-commit`](https://pre-commit.com) hooks that perform
+validation on each commit, catching more egregious errors and ensuring
+[style conventions](https://developer.hashicorp.com/terraform/language/syntax/style). They can
+be installed via the following commands:
+
+```shell
+$ brew install pre-commit tflint trivy go
+$ pre-commit install
+```
