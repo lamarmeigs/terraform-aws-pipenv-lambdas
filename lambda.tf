@@ -1,3 +1,4 @@
+# trivy:ignore:AVD-AWS-0066: Tracing is configured by user
 resource "aws_lambda_function" "this" {
   for_each = var.functions
 
@@ -5,9 +6,9 @@ resource "aws_lambda_function" "this" {
   handler           = each.value.handler
   role              = aws_iam_role.lambda[each.key].arn
   runtime           = var.runtime
-  s3_bucket         = module.package.s3_object.bucket
-  s3_key            = module.package.s3_object.key
-  s3_object_version = module.package.s3_object.version_id
+  s3_bucket         = aws_s3_object.lambda_package.bucket
+  s3_key            = aws_s3_object.lambda_package.key
+  s3_object_version = aws_s3_object.lambda_package.version_id
 
   architectures                  = each.value.architectures
   memory_size                    = each.value.memory_size

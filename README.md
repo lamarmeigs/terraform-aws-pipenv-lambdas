@@ -32,7 +32,7 @@ module "example" {
 | Name | Version |
 |------|---------|
 | <a name="provider_aws"></a> [aws](#provider\_aws) | 5.44.0 |
-| <a name="provider_local"></a> [local](#provider\_local) | 2.5.1 |
+| <a name="provider_external"></a> [external](#provider\_external) | 2.3.3 |
 | <a name="provider_null"></a> [null](#provider\_null) | 3.2.2 |
 
 ## Inputs
@@ -58,7 +58,6 @@ module "example" {
 | Name | Description |
 |------|-------------|
 | <a name="output_functions"></a> [functions](#output\_functions) | Map of function names (as input) to finalized function names and ARNs |
-| <a name="output_package"></a> [package](#output\_package) | Map of S3 object data (bucket, key, and version\_id) for the deployed package |
 
 ## Resources
 
@@ -78,7 +77,8 @@ module "example" {
 | [aws_s3_bucket_public_access_block.builds_access_block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_public_access_block) | resource |
 | [aws_s3_bucket_server_side_encryption_configuration.builds](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_server_side_encryption_configuration) | resource |
 | [aws_s3_bucket_versioning.builds](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_versioning) | resource |
-| [null_resource.requirements](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
+| [aws_s3_object.lambda_package](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_object) | resource |
+| [null_resource.build](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
 <!-- END_TF_DOCS -->
 
 
@@ -101,7 +101,17 @@ $ tfenv install 1.7.5
 $ tfenv use 1.7.5
 ```
 
-The packaging module uses Docker to avoid system conflicts when installing your Lambda
+The build scripts were originally developed using Python 3.10; they should work for all newer
+minor versions, as well. Using [pyenv](https://github.com/pyenv/pyenv) is always recommended. No
+subdependencies are needed.
+
+```shell
+$ brew install pyenv
+$ pyenv install 3.10
+$ pyenv global use 3.10
+```
+
+Finally, the build script uses Docker to avoid system conflict when installing your Lambda
 functions' dependencies:
 
 ```shell

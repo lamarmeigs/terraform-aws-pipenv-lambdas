@@ -58,46 +58,37 @@ resource "aws_s3_bucket_versioning" "builds" {
   }
 }
 
-# NB: The terraform-aws-modules/lambda module supports only native pip `requirements.txt` file.
-# We must create such a file manually based on the pipenv lockfile.
-data "local_file" "pipfile_lock" {
-  filename = join("/", [var.root, var.pipfile_lock_path])
+data "external" "hash" {
+  program = ["python", "${path.module}/hash.py"]
+  query = {
+    packages     = jsonencode(var.packages)
+    root         = var.root
+    pipfile_lock = var.pipfile_lock_path
+  }
 }
 
-resource "null_resource" "requirements" {
+resource "null_resource" "build" {
   triggers = {
-    lockfile = data.local_file.pipfile_lock.content
+    hash = data.external.hash.result.build_hash
   }
 
   provisioner "local-exec" {
-    command = "pipenv requirements > requirements.txt"
+    command = <<-EOT
+      ${path.module}/build.py ${data.external.hash.result.filename} \
+        --packages ${join(" ", var.packages)} \
+        --pipfile_lock ${var.pipfile_lock_path} \
+        --root ${var.root} \
+        --runtime ${var.runtime}
+    EOT
   }
 }
 
-module "package" {
-  source  = "terraform-aws-modules/lambda/aws"
-  version = "~> 7.2"
+resource "aws_s3_object" "lambda_package" {
+  depends_on = [null_resource.build]
 
-  depends_on = [null_resource.requirements]
-
-  create_function          = false
-  recreate_missing_package = false
-  build_in_docker          = true
-  runtime                  = var.runtime
-
-  store_on_s3 = true
-  s3_bucket   = aws_s3_bucket.builds.id
-  source_path = [
-    {
-      path = var.root
-      # A negated negative-lookahead ensures that any local directories not corresponding to
-      # var.packages are ignored, without affecting installed third-party dependencies.
-      patterns = ["!^(?!${join("|", var.packages)}).*"]
-    },
-    {
-      pip_requirements = "requirements.txt"
-    }
-  ]
-
-  # checkov:skip=CKV_TF_1: Use version number rather than commit hash for convenience
+  acl           = "private"
+  bucket        = aws_s3_bucket.builds.id
+  key           = data.external.hash.result.filename
+  source        = data.external.hash.result.filename
+  storage_class = "ONEZONE_IA"
 }

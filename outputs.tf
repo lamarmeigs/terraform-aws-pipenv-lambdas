@@ -9,8 +9,3 @@ output "functions" {
   }
   description = "Map of function names (as input) to finalized function names and ARNs"
 }
-
-output "package" {
-  value       = module.package.s3_object
-  description = "Map of S3 object data (bucket, key, and version_id) for the deployed package"
-}

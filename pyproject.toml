@@ -5,5 +5,6 @@ skip-string-normalization = true
 max-line-length = 88
 disable = [
   "missing-module-docstring",
+  "redefined-outer-name",
   "useless-return",
 ]

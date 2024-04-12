@@ -70,6 +70,7 @@ resource "aws_iam_policy" "logging" {
   policy = data.aws_iam_policy_document.logging[each.key].json
 }
 
+# trivy:ignore:AVD-AWS-0057: Grant broad CloudWatch Logs permission during development
 data "aws_iam_policy_document" "logging" {
   for_each = var.functions
 
