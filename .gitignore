@@ -35,3 +35,7 @@ terraform.rc
 
 # Distributable module shouldn't have a lockfile
 .terraform.lock.hcl
+
+# Local build files
+**/builds
+**/requirements.txt

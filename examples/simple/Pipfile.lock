@@ -1,0 +1,29 @@
+{
+    "_meta": {
+        "hash": {
+            "sha256": "68afee82f47e9a4f883e6d2ccb1a86d214850feb63dd1187196ecc35ceef6125"
+        },
+        "pipfile-spec": 6,
+        "requires": {
+            "python_version": "3.10"
+        },
+        "sources": [
+            {
+                "name": "pypi",
+                "url": "https://pypi.org/simple",
+                "verify_ssl": true
+            }
+        ]
+    },
+    "default": {
+        "pyjokes": {
+            "hashes": [
+                "sha256:08860eedb78cbfa4618243c8db088f21c39823ece1fdaf0133e52d9c56e981a5",
+                "sha256:70b6125186dee5845038505cd16b5e09250da46c730e36b44ffd870e3c81aaaa"
+            ],
+            "index": "pypi",
+            "version": "==0.6.0"
+        }
+    },
+    "develop": {}
+}

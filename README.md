@@ -15,7 +15,14 @@ for HCL's declarative syntax.
 module "example" {
   source = "."
 
-  name = "Alice"
+  packages = ["src"]
+  runtime  = "python3.10"
+  service  = "example"
+  functions = {
+    ExampleFunction = {
+      handler = "path.to.handler"
+    }
+  }
 }
 ```
 
@@ -99,6 +106,31 @@ functions' dependencies:
 
 ```shell
 $ brew install docker
+```
+
+### Testing
+
+The `examples` directory contain usable root configurations demonstrating the module's usage. When
+making changes, be sure that they remain applicable:
+
+```shell
+$ export AWS_PROFILE=my-sso-profile && aws sso login
+$ cd examples/simple
+$ terraform init
+$ terraform apply
+```
+
+The created functions may then be invoked through the AWS Console or from the command line:
+
+```shell
+$ aws lambda invoke --function-name $(terraform output -raw function_name) /dev/stdout
+```
+
+This will create new billable resources in your AWS account, so be sure to destroy them when you're
+done!
+
+```shell
+$ terraform destroy
 ```
 
 ### Validation
