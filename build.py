@@ -40,6 +40,7 @@ Or via the command line for testing:
 
 Logs are emitted to stderr to ensure visibilty during Terraform runs. The log
 level can be modified by setting the LOG_LEVEL environment variable.
+
 Note that this script must be run in an environment with Python, Pip, Pipenv,
 and Docker installed.
 """
@@ -48,7 +49,6 @@ import logging
 import os
 import platform
 import shlex
-import shutil
 import subprocess
 import sys
 import tempfile
@@ -86,33 +86,38 @@ def _get_service_files(root: str, packages: list[str]) -> list[str]:
 
 
 def _add_files_to_build(build_zip: zipfile.ZipFile, root: str, file_paths: list[str]):
-    """Add all given local files to the open zip file."""
+    """Add all given local files to the open zip file with appropriate permissions."""
     for path in file_paths:
         build_path = os.path.relpath(path, start=root)
+        zinfo = zipfile.ZipInfo(build_path)
+        zinfo.external_attr = 0o644 << 16
+
         logger.debug(f'Zipping {build_path}...')
-        with open(path, 'rb') as src, build_zip.open(build_path, 'w') as dest:
-            shutil.copyfileobj(src, dest)
+        with open(path, 'rb') as src:
+            build_zip.writestr(zinfo, src.read())
 
 
 def _install_dependencies(pipfile_lock: str, target_directory: str, runtime: str):
     """Install dependencies to the target directory via the runtime's docker image."""
     requirements_file = os.path.join(target_directory, 'requirements.txt')
-    with open(requirements_file, 'w') as requirements:
+    with open(requirements_file, 'w', encoding='utf-8') as requirements:
         subprocess.run(
             ['pipenv', 'requirements'],
             stdout=requirements,
             cwd=os.path.dirname(pipfile_lock),
+            check=True,
         )
 
     docker_command = ['docker', 'run', '--rm']
     if platform.machine().lower().startswith('arm'):
         docker_command.extend(['--platform', 'linux/amd64'])
 
-    docker_directory = '/var/task'
-    docker_command.extend(['-w', docker_directory])
+    docker_work_directory = '/var/task'
+    docker_command.extend(['-w', docker_work_directory])
     docker_command.extend(
-        ['-v', f'{os.path.abspath(target_directory)}:{docker_directory}:z']
+        ['-v', f'{os.path.abspath(target_directory)}:{docker_work_directory}:z']
     )
+    docker_command.extend(['-e CODEARTIFACT_AUTH_TOKEN'])
 
     pip_cache = (
         subprocess.run(
@@ -128,11 +133,16 @@ def _install_dependencies(pipfile_lock: str, target_directory: str, runtime: str
     image = f'public.ecr.aws/sam/build-{runtime}'
     docker_command.append(image)
 
-    docker_requirements_file = os.path.join(docker_directory, 'requirements.txt')
+    docker_requirements_file = os.path.join(docker_work_directory, 'requirements.txt')
     install_command = ['pip', 'install', '--no-compile']
     install_command.extend(['--requirement', docker_requirements_file])
-    install_command.extend(['--target', docker_directory])
-    chown_command = ['chown', '-R', f'{os.getuid()}:{os.getgid()}', docker_directory]
+    install_command.extend(['--target', docker_work_directory])
+    chown_command = [
+        'chown',
+        '-R',
+        f'{os.getuid()}:{os.getgid()}',
+        docker_work_directory,
+    ]
     shell_command = ' '.join(
         [shlex.quote(arg) for arg in install_command]
         + ['&&']
@@ -183,15 +193,22 @@ if __name__ == '__main__':
     logger.info('Creating build directory...')
     os.makedirs(os.path.dirname(args.filename), exist_ok=True)
 
-    with zipfile.ZipFile(args.filename, 'w', compression=zipfile.ZIP_DEFLATED) as build:
-        logger.info('Adding service packages to build...')
-        service_files = _get_service_files(args.root, args.packages)
-        _add_files_to_build(build, args.root, service_files)
+    try:
+        with zipfile.ZipFile(
+            args.filename, 'w', compression=zipfile.ZIP_DEFLATED
+        ) as build:
+            logger.info('Adding service packages to build...')
+            service_files = _get_service_files(args.root, args.packages)
+            _add_files_to_build(build, args.root, service_files)
 
-        with tempfile.TemporaryDirectory(dir=os.environ.get('RUNNER_TEMP')) as temp:
-            pipfile_lock = os.path.join(args.root, args.pipfile_lock)
-            logger.info('Installing dependencies...')
-            _install_dependencies(pipfile_lock, temp, args.runtime)
-            dependency_files = _list_files(temp)
-            logger.info('Adding dependencies to build...')
-            _add_files_to_build(build, temp, dependency_files)
+            with tempfile.TemporaryDirectory(dir=os.environ.get('RUNNER_TEMP')) as temp:
+                pipfile_lock = os.path.join(args.root, args.pipfile_lock)
+                logger.info('Installing dependencies...')
+                _install_dependencies(pipfile_lock, temp, args.runtime)
+                dependency_files = _list_files(temp)
+                logger.info('Adding dependencies to build...')
+                _add_files_to_build(build, temp, dependency_files)
+    except:  # noqa: E722
+        logger.exception('Build failed')
+        os.unlink(args.filename)
+        sys.exit(1)
