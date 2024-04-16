@@ -26,8 +26,12 @@ jobs:
           terraform_version: 1.8.0
 
       - name: Terraform Format
-        id: fmt
         run: terraform fmt -check -recursive
+
+      - name: Python Format
+        uses: psf/black@stable
+        with:
+          options: "--check --verbose"
 
   validate:
     name: 'Validate Terraform'
