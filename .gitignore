@@ -38,3 +38,6 @@ terraform.rc
 
 # Local build files
 **/builds
+
+# Checkov's downloaded dependencies
+**/.external_modules

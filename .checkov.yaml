@@ -1,0 +1,8 @@
+directory: examples
+download-external-modules: true
+evaluate-variables: true
+external-modules-download-path: .external_modules
+framework: terraform
+quiet: true
+skip-check: CKV2_GHA_1
+summary-position: top
