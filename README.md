@@ -154,3 +154,7 @@ be installed via the following commands:
 $ brew install pre-commit tflint go
 $ pre-commit install
 ```
+
+The repository is also configured to execute [Checkov](https://github.com/bridgecrewio/checkov)
+scans. Running the scanner as an [add-on](https://www.checkov.io/1.Welcome/Quick%20Start.html#add-ons)
+to your code editor is strongly recommended.
