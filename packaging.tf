@@ -1,4 +1,3 @@
-# trivy:ignore:AVD-AWS-0089: Ignore bucket logging
 resource "aws_s3_bucket" "builds" {
   bucket = var.service
 }

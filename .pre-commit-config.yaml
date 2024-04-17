@@ -4,9 +4,6 @@ repos:
     hooks:
       - id: terraform_fmt
       - id: terraform_tflint
-      - id: terraform_trivy
-        args:
-          - --args=--skip-dirs="**/.terraform"
       - id: terraform_docs
         args:
           - --hook-config=--add-to-existing-file=true
