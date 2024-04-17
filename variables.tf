@@ -64,7 +64,7 @@ variable "kms_key_arn" {
 
 variable "log_retention_in_days" {
   type        = number
-  default     = 60
+  default     = 365
   description = "The number of days to retain all functions' logs in CloudWatch"
 }
 

@@ -1,4 +1,3 @@
-# trivy:ignore:AVD-AWS-0066: Tracing is configured by user
 resource "aws_lambda_function" "this" {
   for_each = var.functions
 

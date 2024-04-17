@@ -44,7 +44,7 @@ module "example" {
 | <a name="input_functions"></a> [functions](#input\_functions) | Map of function names to configuration objects. Each object attribute corresponds to a top-level variable or an argument to the aws\_lambda\_function resource. | <pre>map(<br>    object({<br>      architectures           = optional(list(string), ["x86_64"])<br>      code_signing_config_arn = optional(string)<br>      description             = optional(string)<br>      environment             = optional(map(string), {})<br>      ephemeral_storage_size  = optional(number)<br>      handler                 = string<br>      iam_statements = optional(<br>        list(<br>          object({<br>            actions   = list(string)<br>            sid       = optional(string)<br>            effect    = string<br>            resources = list(string)<br>          })<br>        ),<br>        []<br>      )<br>      layers                         = optional(list(string))<br>      memory_size                    = optional(number, 128)<br>      publish                        = optional(bool, false)<br>      reserved_concurrent_executions = optional(number, -1)<br>      timeout                        = optional(number, 6)<br>      tracing_config_mode            = optional(string)<br>      vpc_security_group_ids         = optional(list(string))<br>      vpc_subnet_ids                 = optional(list(string))<br>    })<br>  )</pre> | n/a | yes |
 | <a name="input_iam_statements"></a> [iam\_statements](#input\_iam\_statements) | IAM policy statements applied to each function, defining common permissions. Can be amended in individual functions. | <pre>list(<br>    object({<br>      sid       = optional(string)<br>      effect    = string<br>      actions   = list(string)<br>      resources = list(string)<br>    })<br>  )</pre> | `[]` | no |
 | <a name="input_kms_key_arn"></a> [kms\_key\_arn](#input\_kms\_key\_arn) | KMS key used to encrypt build artifacts, environment variables, and logs | `string` | `null` | no |
-| <a name="input_log_retention_in_days"></a> [log\_retention\_in\_days](#input\_log\_retention\_in\_days) | The number of days to retain all functions' logs in CloudWatch | `number` | `60` | no |
+| <a name="input_log_retention_in_days"></a> [log\_retention\_in\_days](#input\_log\_retention\_in\_days) | The number of days to retain all functions' logs in CloudWatch | `number` | `365` | no |
 | <a name="input_packages"></a> [packages](#input\_packages) | A list of local packages to include in the deployed Lambda build, relative to the root | `list(string)` | n/a | yes |
 | <a name="input_pipfile_lock_path"></a> [pipfile\_lock\_path](#input\_pipfile\_lock\_path) | Path to the Pipfile.lock to use during builds, relative to the root | `string` | `"Pipfile.lock"` | no |
 | <a name="input_root"></a> [root](#input\_root) | Root of the build, from which Pipfile.lock and all local packages may be found | `string` | `"../.."` | no |
@@ -151,6 +151,10 @@ validation on each commit, catching more egregious errors and ensuring
 be installed via the following commands:
 
 ```shell
-$ brew install pre-commit tflint trivy go
+$ brew install pre-commit tflint go
 $ pre-commit install
 ```
+
+The repository is also configured to execute [Checkov](https://github.com/bridgecrewio/checkov)
+scans. Running the scanner as an [add-on](https://www.checkov.io/1.Welcome/Quick%20Start.html#add-ons)
+to your code editor is strongly recommended.

@@ -8,10 +8,6 @@ on:
       - '**.py'
       - '**.tf'
 
-permissions:
-  id-token: write
-  contents: read
-
 jobs:
   format:
     name: 'Check format'

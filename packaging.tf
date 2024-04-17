@@ -1,6 +1,9 @@
-# trivy:ignore:AVD-AWS-0089: Ignore bucket logging
 resource "aws_s3_bucket" "builds" {
   bucket = var.service
+
+  # checkov:skip=CKV2_AWS_62: S3 event notifications are unnecessary
+  # checkov:skip=CKV_AWS_144: Cross-region replication is unnecessary
+  # checkov:skip=CKV_AWS_18: Access logging is unnecessary
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "builds" {
