@@ -1,0 +1,43 @@
+name: 'Release'
+
+on:
+  push:
+    branches:
+      - 'main'
+    paths:
+      - '*.py'
+      - '*.tf'
+
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Commit SHA to tag"
+        required: true
+        type: string
+      version:
+        description: "Version to release (must exist in CHANGELOG.md)"
+        required: true
+        type: string
+
+jobs:
+  release:
+    if: github.repository == 'lamarmeigs/terraform-aws-pipenv-lambdas'
+    name: 'Release'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get Changelog Entry
+        id: changelog_reader
+        uses: mindsers/changelog-reader-action@v2
+        with:
+          version: ${{ inputs.version || null }}
+
+      - name: Create a GitHub release
+        uses: ncipollo/release-action@v1
+        with:
+          commit: ${{ inputs.ref || github.sha }}
+          tag: v${{ steps.changelog_reader.outputs.version }}
+          name: v${{ steps.changelog_reader.outputs.version }}
+          body: ${{ steps.changelog_reader.outputs.changes }}
