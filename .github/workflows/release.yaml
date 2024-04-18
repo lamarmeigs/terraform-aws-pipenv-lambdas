@@ -35,6 +35,8 @@ jobs:
           version: ${{ inputs.version || null }}
 
       - name: Create a GitHub release
+        permissions:
+          contents: write
         uses: ncipollo/release-action@v1
         with:
           commit: ${{ inputs.ref || github.sha }}
